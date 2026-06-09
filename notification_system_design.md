@@ -650,3 +650,132 @@ AND createdAt >= NOW() - INTERVAL '7 DAY';
 A composite index on studentID, isRead, and createdAt significantly improves query performance while avoiding unnecessary indexing overhead.
 
 Added Stage 3 Query Optimization
+
+# Stage 4 – Reducing Database Load
+
+## Problem
+
+Notifications are fetched on every page load.
+
+Consequences:
+
+- Increased DB traffic
+- Slow page response
+- Higher infrastructure cost
+- Poor user experience
+
+---
+
+## Solution 1 – Redis Cache
+
+Store frequently accessed notifications in Redis.
+
+Flow:
+
+```text
+User
+ ↓
+Redis Cache
+ ↓
+Database (only if cache miss)
+```
+
+Benefits:
+
+- Millisecond response time
+- Reduced DB load
+
+Tradeoff:
+
+- Additional infrastructure
+- Cache invalidation complexity
+
+---
+
+## Solution 2 – Pagination
+
+Instead of loading all notifications:
+
+```text
+?page=1&limit=20
+```
+
+Benefits:
+
+- Smaller responses
+- Faster API performance
+
+Tradeoff:
+
+- Requires multiple requests
+
+---
+
+## Solution 3 – Lazy Loading
+
+Load notifications only when notification panel opens.
+
+Benefits:
+
+- Reduced unnecessary requests
+
+Tradeoff:
+
+- Slight delay when opening notifications
+
+---
+
+## Solution 4 – Unread Count API
+
+Fetch only unread count initially.
+
+```http
+GET /users/{id}/notifications/unread-count
+```
+
+Benefits:
+
+- Very small payload
+
+Tradeoff:
+
+- Additional endpoint maintenance
+
+---
+
+## Solution 5 – WebSockets
+
+Push notifications in real time.
+
+Benefits:
+
+- No polling
+- Reduced API requests
+
+Tradeoff:
+
+- Persistent connection management
+
+---
+
+## Recommended Architecture
+
+```text
+Client
+ ↓
+Redis
+ ↓
+Notification API
+ ↓
+PostgreSQL
+
+WebSocket Server
+ ↓
+Real-Time Updates
+```
+
+---
+
+## Conclusion
+
+Combining Redis caching, pagination, unread-count APIs, lazy loading, and WebSockets provides the best balance between performance and scalability.

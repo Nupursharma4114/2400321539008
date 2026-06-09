@@ -519,3 +519,132 @@ db.notifications.updateOne(
 ## Conclusion
 
 PostgreSQL with indexing, partitioning, caching, and message queues provides a scalable solution capable of handling millions of notifications while maintaining fast response times.
+
+# Stage 3 – Query Optimization and Indexing
+
+## Given Query
+
+```sql
+SELECT *
+FROM notifications
+WHERE studentID = 1042
+AND isRead = false
+ORDER BY createdAt ASC;
+```
+
+---
+
+## Is The Query Correct?
+
+Yes.
+
+The query correctly retrieves all unread notifications of student 1042 and sorts them by creation time.
+
+---
+
+## Why Is It Slow?
+
+Current data size:
+
+- 50,000 students
+- 5,000,000 notifications
+
+Without proper indexing, the database performs a full table scan.
+
+Complexity:
+
+```text
+O(N)
+```
+
+where N = total notifications.
+
+The database may examine millions of rows before finding matching records.
+
+---
+
+## Improvements
+
+Avoid:
+
+```sql
+SELECT *
+```
+
+Use only required columns.
+
+```sql
+SELECT notification_id,
+title,
+message,
+createdAt
+FROM notifications
+WHERE studentID=1042
+AND isRead=false
+ORDER BY createdAt ASC;
+```
+
+---
+
+## Recommended Index
+
+```sql
+CREATE INDEX idx_student_read_created
+ON notifications(studentID,isRead,createdAt);
+```
+
+Benefits:
+
+- Faster filtering
+- Faster sorting
+- Reduced disk reads
+
+Expected complexity:
+
+```text
+O(log N)
+```
+
+---
+
+## Should We Add Indexes On Every Column?
+
+No.
+
+Adding indexes on every column is bad practice.
+
+### Problems
+
+1. Increased storage usage.
+2. Slower INSERT operations.
+3. Slower UPDATE operations.
+4. More index maintenance.
+
+Indexes should only be created on frequently searched and sorted columns.
+
+---
+
+## Query To Find Students Receiving Placement Notifications In Last 7 Days
+
+```sql
+SELECT DISTINCT studentID
+FROM notifications
+WHERE notificationType='Placement'
+AND createdAt >= NOW() - INTERVAL '7 DAY';
+```
+
+---
+
+## Additional Optimization Techniques
+
+1. Pagination
+2. Partitioning
+3. Redis Cache
+4. Read Replicas
+5. Materialized Views
+
+---
+
+## Conclusion
+
+A composite index on studentID, isRead, and createdAt significantly improves query performance while avoiding unnecessary indexing overhead.

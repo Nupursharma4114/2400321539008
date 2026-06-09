@@ -35,5 +35,4 @@ response = requests.get(API_URL)
 
 notifications = response.json()
 
-# Priority mapping
 priority_map = {

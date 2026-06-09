@@ -780,3 +780,170 @@ Real-Time Updates
 
 Combining Redis caching, pagination, unread-count APIs, lazy loading, and WebSockets provides the best balance between performance and scalability.
 Added Stage 4 Performance Improvements
+
+# Stage 5 – Reliable Bulk Notification Delivery
+
+## Existing Problems
+
+Current implementation:
+
+```python
+for student_id in student_ids:
+    send_email(student_id,message)
+    save_to_db(student_id,message)
+    push_to_app(student_id,message)
+```
+
+Issues:
+
+### Sequential Processing
+
+50,000 users processed one-by-one.
+
+Very slow.
+
+---
+
+### Failure Handling
+
+If email fails midway:
+
+- Some users receive notification
+- Some users do not
+- System becomes inconsistent
+
+---
+
+### Tight Coupling
+
+Email, database, and app notifications depend on each other.
+
+One failure affects everything.
+
+---
+
+## Improved Design
+
+Use Message Queue Architecture.
+
+Components:
+
+1. Notification Service
+2. Database
+3. Kafka/RabbitMQ
+4. Email Worker
+5. Push Worker
+
+---
+
+## Workflow
+
+```text
+HR Clicks Notify All
+        ↓
+Notification Service
+        ↓
+Save Notification To DB
+        ↓
+Publish Event To Queue
+        ↓
+Email Worker
+        ↓
+Push Worker
+```
+
+---
+
+## Why Save To DB First?
+
+Database is the source of truth.
+
+If email fails:
+
+- Notification still exists
+- Retry can happen later
+
+---
+
+## Revised Pseudocode
+
+```python
+def notify_all(student_ids,message):
+
+    for student_id in student_ids:
+
+        notification_id = save_to_db(
+            student_id,
+            message
+        )
+
+        publish_event(
+            "notification_created",
+            {
+                "notification_id": notification_id,
+                "student_id": student_id,
+                "message": message
+            }
+        )
+```
+
+### Email Worker
+
+```python
+while True:
+
+    event = consume_event()
+
+    send_email(
+        event["student_id"],
+        event["message"]
+    )
+```
+
+### Push Worker
+
+```python
+while True:
+
+    event = consume_event()
+
+    push_to_app(
+        event["student_id"],
+        event["message"]
+    )
+```
+
+---
+
+## Retry Mechanism
+
+If email fails:
+
+```text
+Retry 1
+Retry 2
+Retry 3
+Dead Letter Queue
+```
+
+Benefits:
+
+- Reliability
+- Fault tolerance
+- No data loss
+
+---
+
+## Advantages
+
+1. Faster processing
+2. Scalable architecture
+3. Independent services
+4. Retry support
+5. Better fault tolerance
+
+---
+
+## Conclusion
+
+The notification should first be saved to the database and then published to a message queue. Email and push delivery should occur asynchronously using worker services to ensure reliability, scalability, and fault tolerance.

@@ -947,3 +947,5 @@ Benefits:
 ## Conclusion
 
 The notification should first be saved to the database and then published to a message queue. Email and push delivery should occur asynchronously using worker services to ensure reliability, scalability, and fault tolerance.
+
+Added Stage 5 Bulk Notification Design

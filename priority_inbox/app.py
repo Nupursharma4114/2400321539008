@@ -33,7 +33,6 @@ for notification in top10:
 
 response = requests.get(API_URL)
 
-# Convert response to JSON
 notifications = response.json()
 
 # Priority mapping

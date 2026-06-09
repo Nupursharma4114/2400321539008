@@ -949,3 +949,11 @@ Benefits:
 The notification should first be saved to the database and then published to a message queue. Email and push delivery should occur asynchronously using worker services to ensure reliability, scalability, and fault tolerance.
 
 Added Stage 5 Bulk Notification Design
+
+## How to Run
+
+1. Install dependencies
+   pip install -r requirements.txt
+
+2. Run application
+   python app.py

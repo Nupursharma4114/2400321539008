@@ -30,3 +30,11 @@ print("-" * 40)
 
 for notification in top10:
     print(notification)
+
+response = requests.get(API_URL)
+
+# Convert response to JSON
+notifications = response.json()
+
+# Priority mapping
+priority_map = {

@@ -648,3 +648,5 @@ AND createdAt >= NOW() - INTERVAL '7 DAY';
 ## Conclusion
 
 A composite index on studentID, isRead, and createdAt significantly improves query performance while avoiding unnecessary indexing overhead.
+
+Added Stage 3 Query Optimization
